@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>NEO MEMO</title>
     
-    <link rel="apple-touch-icon" href="https://via.placeholder.com/1024x1024.png?text=MEMO"> 
-    <link rel="icon" type="image/png" href="https://via.placeholder.com/192x192.png?text=MEMO">
-    
+    <link rel="apple-touch-icon" href="./icon_clean.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icon_clean.png">
+    <link rel="shortcut icon" href="./icon_clean.png">
+
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="NEO MEMO">
@@ -20,7 +21,6 @@
             --accent-gold: #e2d17c;
         }
 
-        /* 배경 및 수첩 디자인 (이전과 동일하게 유지하여 일관성 부여) */
         html, body {
             width: 100%;
             height: 100%;
@@ -29,6 +29,7 @@
             background-color: #dcdcdc;
             display: flex;
             justify-content: center;
+            overflow: hidden;
         }
 
         body {
@@ -72,7 +73,8 @@
             font-size: 19px;
             color: #333;
             overflow-y: auto;
-            spellcheck: false;
+            padding: 0;
+            margin-top: 5px;
         }
 
         .save-btn {
@@ -86,15 +88,21 @@
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .save-btn:active {
+            background-color: #000;
+            transform: scale(0.98);
         }
     </style>
 </head>
 <body>
 
 <div class="notebook">
-    <div class="header-info" id="current-time"></div>
+    <div class="header-info" id="current-time">시간 로딩 중...</div>
     <textarea class="memo-area" id="memo-input" placeholder="메모를 입력하세요..." spellcheck="false"></textarea>
-    <button class="save-btn" onclick="saveMemo()">기입</button>
+    <button class="save-btn" onclick="sendToGmail()">기입</button>
 </div>
 
 <script>
@@ -108,33 +116,18 @@
         document.getElementById('current-time').innerText = now.toLocaleString('ko-KR', options);
     }
 
-    function saveMemo() {
+    function sendToGmail() {
         const content = document.getElementById('memo-input').value;
         const timeInfo = document.getElementById('current-time').innerText;
-        const btn = document.querySelector('.save-btn');
 
         if (!content.trim()) {
             alert("내용을 입력해 주세요!");
             return;
         }
 
-        btn.innerText = "전송 중...";
-        btn.disabled = true;
-
-        google.script.run
-            .withSuccessHandler(function() {
-                alert("Gmail로 전송되었습니다!");
-                document.getElementById('memo-input').value = "";
-                btn.innerText = "기입";
-                btn.disabled = false;
-                updateDateTime();
-            })
-            .withFailureHandler(function(err) {
-                alert("전송 실패: " + err);
-                btn.innerText = "기입";
-                btn.disabled = false;
-            })
-            .sendMemoToGmail(content, timeInfo);
+        const subject = encodeURIComponent(`[NEO MEMO] ${timeInfo}`);
+        const body = encodeURIComponent(`작성시간: ${timeInfo}\n\n내용:\n${content}`);
+        window.location.href = `mailto:mistpax@gmail.com?subject=${subject}&body=${body}`;
     }
 
     updateDateTime();
